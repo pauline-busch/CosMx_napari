@@ -9,8 +9,11 @@ import matplotlib.colors as mcolors
 # USER SETTINGS
 # ----------------------------
 
-POLYGONS_CSV = r"/Volumes/T7/CosMx/Datasets/6k/napari/napari_input/polygons/Tx-naïve_BL_TMA2_polygons.csv"
-TRANSCRIPTS_CSV = r"/Volumes/T7/CosMx/Datasets/6k/napari/napari_input/transcripts/Tx-naïve_BL_TMA2_tx.csv"
+#POLYGONS_CSV = r"/Volumes/T7/CosMx/Datasets/6k/napari/napari_input/polygons/Remission_TL_TMA1_polygons.csv"
+#TRANSCRIPTS_CSV = r"/Volumes/T7/CosMx/Datasets/6k/napari/napari_input/transcripts/Remission_TL_TMA1_tx.csv"
+
+POLYGONS_CSV = r"F:/CosMx/Datasets/6k/napari/napari_input/polygons/Remission_TL_TMA1_polygons.csv"
+TRANSCRIPTS_CSV = r"F:/CosMx/Datasets/6k/napari/napari_input/transcripts/Remission_TL_TMA1_tx.csv"
 
 # Optional: load existing tissue annotation polygons if present (napari shapes CSV)
 ANNOTATIONS_CSV = None
@@ -46,8 +49,16 @@ GENES_OF_INTEREST = [
     "SLC7A2",
     "SOX5",
     "TIMP3",
-    "VEGFC",
-]
+    "VEGFC"]
+
+# GENES_OF_INTEREST = [
+#     "AICDA", 
+#     "BCL6", 
+#     "CXCL13", 
+#     "CXCR5", 
+#     "MKI67", 
+#     "TOP2A"
+#     ]
 
 # ----------------------------
 # COLORS
