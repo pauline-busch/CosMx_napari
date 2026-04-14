@@ -1,4 +1,5 @@
 import os
+import re
 import numpy as np
 import pandas as pd
 import napari
@@ -9,11 +10,19 @@ import matplotlib.colors as mcolors
 # USER SETTINGS
 # ----------------------------
 
-#POLYGONS_CSV = r"/Volumes/T7/CosMx/Datasets/6k/napari/napari_input/polygons/Remission_TL_TMA1_polygons.csv"
-#TRANSCRIPTS_CSV = r"/Volumes/T7/CosMx/Datasets/6k/napari/napari_input/transcripts/Remission_TL_TMA1_tx.csv"
+# POLYGONS_CSV = r"/Volumes/T7/CosMx/Datasets/6k/napari/napari_input/polygons/anti-TNF-IR_TL_TMA5_polygons.csv"
+# TRANSCRIPTS_CSV = r"/Volumes/T7/CosMx/Datasets/6k/napari/napari_input/transcripts/anti-TNF-IR_TL_TMA5_tx.csv"
 
-POLYGONS_CSV = r"F:/CosMx/Datasets/6k/napari/napari_input/polygons/Remission_TL_TMA1_polygons.csv"
-TRANSCRIPTS_CSV = r"F:/CosMx/Datasets/6k/napari/napari_input/transcripts/Remission_TL_TMA1_tx.csv"
+#POLYGONS_CSV = r"/Volumes/T7/CosMx/Datasets/6k/napari/napari_input/polygons/anti-TNF-IR_TL_TMA7_polygons.csv"
+#TRANSCRIPTS_CSV = r"/Volumes/T7/CosMx/Datasets/6k/napari/napari_input/transcripts/anti-TNF-IR_TL_TMA7_tx.csv"
+
+POLYGONS_CSV = r"F:/CosMx/Datasets/6k/napari/napari_input/polygons/Remission_BL_TMA8_polygons.csv"
+TRANSCRIPTS_CSV = r"F:/CosMx/Datasets/6k/napari/napari_input/transcripts/Remission_BL_TMA8_tx.csv"
+
+tissue_name = re.search("([^/]+)_polygons.csv", POLYGONS_CSV).group(1)
+print(f"Loaded polygons for tissue: {tissue_name}")
+
+annotation_name = "removal"  # default annotation label to apply with hotkeys (can be changed per shape later)
 
 # Optional: load existing tissue annotation polygons if present (napari shapes CSV)
 ANNOTATIONS_CSV = None
@@ -21,17 +30,15 @@ ANNOTATIONS_CSV = None
 
 # Optional: restrict to a gene subset for speed (set to None to load all)
 # GENES_OF_INTEREST = None
+
 GENES_OF_INTEREST = [
     "ADAMTS5",
+    "FN1",
     "CD55",
     "CLU",
-    "CXCL1",
-    "CXCL6",
-    "DEFB1",
     "ERRFI1",
-    "FGF10",
     "GPX3",
-    "HBEGF",
+    "HBEGF", 
     "IGFBP5",
     "INHBA",
     "ITGB8",
@@ -39,9 +46,6 @@ GENES_OF_INTEREST = [
     "MMP3",
     "NTN4",
     "PCSK6",
-    "PGF",
-    "PRG4",
-    "RCAN1",
     "SEMA3A",
     "SEMA3C",
     "SEMA5A",
@@ -49,7 +53,8 @@ GENES_OF_INTEREST = [
     "SLC7A2",
     "SOX5",
     "TIMP3",
-    "VEGFC"]
+    "VEGFC",
+    ] 
 
 # GENES_OF_INTEREST = [
 #     "AICDA", 
@@ -60,6 +65,38 @@ GENES_OF_INTEREST = [
 #     "TOP2A"
 #     ]
 
+# GENES_OF_INTEREST = [
+#     "AICDA", 
+#     "MS4A1", 
+#     "XBP1", 
+#     "PRDX4", 
+#     "CD38",
+#     "IGHG1/2",
+#     "IGHD",
+#     "IGHM",
+#     "S100A6",
+#     "HOPX",
+#     "BCL6",
+#     "JCHAIN",
+#     "IGHA1",
+#     "IGKC",]
+
+# GENES_OF_INTEREST = [
+#     "SELENOP",
+#     "SLC40A1",
+#     "FOLR2",
+#     ]
+
+# GENES_OF_INTEREST = [
+#     "FOSB", "FOS", "ATF3", "HLA-DQA1", "GBP1", "VEGFC",
+#     "RGS16", "WARS1", "NCF1", "RAMP3", "IGF1", "IGFBP5",
+#     "LTBP2", "COMP", "APOE", "CHI3L1", "G0S2", "MFAP4",
+#     "VCAN", "PLTP", "IGHM", "THBD", "IFI6", "FABP3",
+#     "SELP", "RCAN1", "DEFB1", "IFI27", "APOL1", "RAMP3",
+#     "TSPAN7", "POSTN", "PDK4", "CRABP2", "GPX3", "SPON2",
+#     "HBEGF", "ABLIM1", "EGFR", "GSN"
+# ]
+
 # ----------------------------
 # COLORS
 # ----------------------------
@@ -68,9 +105,9 @@ celltype_colors = {
     "Fibroblasts": "#ff8000",
     "Macrophages": "#8208c4",
     "Endothelial.cells": "#990000",
-    "Pericytes.Mural": "#c29a84",
+    "Pericytes.Mural.cells": "#c29a84",
     "B.cells": "#00d5ff",
-    "T.NK.cells": "#1a34ff",
+    "T.cells.NK.cells": "#1a34ff",
     "Plasmablasts": "#ff99cc",
     "Mast.cells": "#666633",
     "Neutrophils": "#aaff80",
@@ -79,6 +116,7 @@ celltype_colors = {
     "RBC": "#e60000",
     "Adipocytes": "#ffcc00",
     "Unassigned": "#cccccc",
+    "undefined": "#cccccc",
 }
 
 annotation_colors = {
@@ -155,20 +193,20 @@ def load_transcripts(transcripts_csv: str, genes_of_interest=None):
     return points, props
 
 
-def load_annotations_if_present(path: str):
-    if path and os.path.exists(path):
-        # napari shapes CSVs are readable via pandas, but easiest is:
-        # let napari load it directly after creating viewer.
-        return True
-    return False
+# def load_annotations_if_present(path: str):
+#     if path and os.path.exists(path):
+#         # napari shapes CSVs are readable via pandas, but easiest is:
+#         # let napari load it directly after creating viewer.
+#         return True
+#     return False
 
 
-def ensure_parent_dir(path: str):
-    if not path:
-        return
-    parent = os.path.dirname(path)
-    if parent and not os.path.exists(parent):
-        os.makedirs(parent, exist_ok=True)
+# def ensure_parent_dir(path: str):
+#     if not path:
+#         return
+#     parent = os.path.dirname(path)
+#     if parent and not os.path.exists(parent):
+#         os.makedirs(parent, exist_ok=True)
 
 
 # ----------------------------
@@ -255,7 +293,7 @@ def main():
     # Annotation layer (editable polygons)
     # ----------------------------
     ann_layer = viewer.add_shapes(
-    name="Tissue_annotations",
+    name=f"{tissue_name}_{annotation_name}",
     shape_type="polygon",
     properties={"annotation": []},
     face_color="annotation",
@@ -287,98 +325,6 @@ def main():
 
         ann_layer.face_color_cycle = annotation_colors_rgba
         ann_layer.face_color_mode = "cycle"
-
-    # ----------------------------
-    # HOTKEYS FOR LABELING ANNOTATIONS
-    # ----------------------------
-
-    def set_selected_annotation(label: str):
-        layer = viewer.layers["Tissue_annotations"]
-        selected = list(layer.selected_data)
-
-        if not selected:
-            print("No annotation shape selected.")
-            return
-
-        # ensure annotation property length matches number of shapes
-        if "annotation" not in layer.properties or \
-           len(layer.properties["annotation"]) != len(layer.data):
-            layer.properties["annotation"] = np.array(
-                [""] * len(layer.data), dtype=object
-            )
-
-        ann = layer.properties["annotation"].astype(object)
-
-        for i in selected:
-            ann[i] = label
-
-        layer.properties["annotation"] = ann
-        layer.refresh()
-
-        print(f"Labeled {len(selected)} shape(s) as '{label}'.")
-
-    @viewer.bind_key("1")
-    def _(viewer):
-        set_selected_annotation("lining")
-
-    @viewer.bind_key("2")
-    def _(viewer):
-        set_selected_annotation("vessel")
-
-    @viewer.bind_key("3")
-    def _(viewer):
-        set_selected_annotation("TLO")
-
-    @viewer.bind_key("4")
-    def _(viewer):
-        set_selected_annotation("other")
-
-    # ----------------------------
-    # Save annotations (press "s")
-    # ----------------------------
-    @viewer.bind_key("s")
-    def _(viewer):
-        layer = viewer.layers["Tissue_annotations"]
-
-        records = []
-
-        for region_id, poly in enumerate(layer.data):
-            region_type = layer.properties["annotation"][region_id]
-
-            if region_type == "":
-                continue
-
-            for point in poly:
-                records.append(
-                    {
-                        "region_id": region_id,
-                        "region_type": region_type,
-                        "y": float(point[0]),
-                        "x": float(point[1]),
-                    }
-                )
-
-        df = pd.DataFrame(records)
-
-        out_path = POLYGONS_CSV.replace("_polygons.csv", "_annotation_polygons.csv")
-        df.to_csv(out_path, index=False)
-
-        print(f"Exported annotation polygons to {out_path}")
-
-    # ----------------------------
-    # Help (press "h")
-    # ----------------------------
-    @viewer.bind_key("h")
-    def _(viewer):
-        print(
-            "\nHotkeys:\n"
-            "  1 = lining\n"
-            "  2 = vessel\n"
-            "  3 = TLO\n"
-            "  4 = other\n"
-            "  s = save annotations\n"
-            "  h = show help\n"
-        )
 
     napari.run()
 
